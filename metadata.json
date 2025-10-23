@@ -1,0 +1,7 @@
+{
+  "name": "AgriChain AI: Edible Oil Value Chain Platform",
+  "description": "An AI-enabled platform to digitize and optimize India's edible oil value chain, from farmers to policymakers, featuring price forecasting, traceability, and logistics management.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
