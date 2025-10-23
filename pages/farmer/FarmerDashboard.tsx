@@ -6,6 +6,7 @@ import { getPriceForecast, getWeatherAdvisory } from '../../services/geminiServi
 import { PriceData, WeatherAdvisory } from '../../types';
 import { mockHistoricalPrices } from '../../data/mockData';
 import { Sun, CloudRain, Wind, Droplets, ArrowUp, ArrowDown } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const PriceForecastChart: React.FC<{ data: PriceData[] }> = ({ data }) => {
     const formattedData = useMemo(() => {
@@ -39,6 +40,7 @@ const FarmerDashboard: React.FC = () => {
     const [forecastData, setForecastData] = useState<PriceData[]>([]);
     const [advisory, setAdvisory] = useState<WeatherAdvisory | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -93,7 +95,7 @@ const FarmerDashboard: React.FC = () => {
             <div className="lg:col-span-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Price Forecast (Next 30 Days)</CardTitle>
+                        <CardTitle>{t('farmerDashboard.priceForecastTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? <div className="h-[300px] flex items-center justify-center">Loading chart...</div> : <PriceForecastChart data={allChartData} />}
@@ -104,7 +106,7 @@ const FarmerDashboard: React.FC = () => {
             <div className="space-y-6">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Current Market Prices</CardTitle>
+                        <CardTitle>{t('farmerDashboard.currentMarketPricesTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                        {marketPrices.map(item => {
@@ -131,16 +133,16 @@ const FarmerDashboard: React.FC = () => {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>AI Weather Advisory</CardTitle>
+                        <CardTitle>{t('farmerDashboard.aiWeatherAdvisoryTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? <div>Loading advisory...</div> : (
                             advisory && (
                                 <div className="space-y-3 text-sm">
-                                    <p><Droplets className="inline mr-2 h-4 w-4 text-blue-500" /><strong>Irrigation:</strong> {advisory.irrigation}</p>
-                                    <p><Sun className="inline mr-2 h-4 w-4 text-yellow-500" /><strong>Harvesting:</strong> {advisory.harvestWindow}</p>
+                                    <p><Droplets className="inline mr-2 h-4 w-4 text-blue-500" /><strong>{t('farmerDashboard.irrigation')}:</strong> {advisory.irrigation}</p>
+                                    <p><Sun className="inline mr-2 h-4 w-4 text-yellow-500" /><strong>{t('farmerDashboard.harvesting')}:</strong> {advisory.harvestWindow}</p>
                                     <div>
-                                        <strong>Pest Alerts:</strong>
+                                        <strong>{t('farmerDashboard.pestAlerts')}:</strong>
                                         <ul className="list-disc list-inside ml-4">
                                             {advisory.pestAlerts.map((alert, i) => <li key={i}>{alert}</li>)}
                                         </ul>

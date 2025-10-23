@@ -2,6 +2,7 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import FarmerDashboard from './pages/farmer/FarmerDashboard';
@@ -10,6 +11,7 @@ import TraceabilityPage from './pages/traceability/TraceabilityPage';
 import Marketplace from './pages/marketplace/Marketplace';
 import LogisticsDashboard from './pages/logistics/LogisticsDashboard';
 import FinanceDashboard from './pages/farmer/FinanceDashboard';
+import SettingsPage from './pages/settings/SettingsPage';
 
 const AppRoutes: React.FC = () => {
     const { user } = useApp();
@@ -45,6 +47,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/logistics" element={<LogisticsDashboard />} />
                 <Route path="/trace/:batchId" element={<TraceabilityPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Layout>
@@ -55,9 +58,11 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
     return (
         <AppProvider>
-            <HashRouter>
-                <AppRoutes />
-            </HashRouter>
+            <LanguageProvider>
+                <HashRouter>
+                    <AppRoutes />
+                </HashRouter>
+            </LanguageProvider>
         </AppProvider>
     );
 };

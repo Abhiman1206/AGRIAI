@@ -4,6 +4,7 @@ import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getPolicyInsights } from '../../services/geminiService';
 import { Lightbulb, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const productionData = [
   { name: '2020', domestic: 35, imports: 65 },
@@ -35,6 +36,7 @@ const PolicyInsightCard: React.FC<{ insight: {id: number, text: string, priority
 const PolicymakerDashboard: React.FC = () => {
     const [insights, setInsights] = useState<{ executiveSummary: string; recommendations: any[] } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const fetchInsights = async () => {
@@ -51,7 +53,7 @@ const PolicymakerDashboard: React.FC = () => {
             <div className="lg:col-span-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Import vs. Domestic Production (Million Tonnes)</CardTitle>
+                        <CardTitle>{t('policymakerDashboard.importVsDomesticTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -61,8 +63,8 @@ const PolicymakerDashboard: React.FC = () => {
                                 <YAxis />
                                 <Tooltip />
                                 <Legend />
-                                <Bar dataKey="imports" stackId="a" fill="#f59e0b" name="Imports" />
-                                <Bar dataKey="domestic" stackId="a" fill="#10b981" name="Domestic Production" />
+                                <Bar dataKey="imports" stackId="a" fill="#f59e0b" name={t('policymakerDashboard.imports')} />
+                                <Bar dataKey="domestic" stackId="a" fill="#10b981" name={t('policymakerDashboard.domesticProduction')} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -71,24 +73,24 @@ const PolicymakerDashboard: React.FC = () => {
             <div className="lg:col-span-1 space-y-4">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Key Performance Indicators</CardTitle>
+                        <CardTitle>{t('policymakerDashboard.kpiTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                         <div className="flex justify-between"><span>Self-Sufficiency Ratio:</span> <span className="font-bold text-green-500">48.0%</span></div>
-                         <div className="flex justify-between"><span>Import Dependency:</span> <span className="font-bold text-yellow-500">52.0%</span></div>
-                         <div className="flex justify-between"><span>Avg. Farmer Income (YoY):</span> <span className="font-bold text-green-500">+8.2%</span></div>
-                         <div className="flex justify-between"><span>Post-Harvest Loss:</span> <span className="font-bold text-red-500">12.5%</span></div>
+                         <div className="flex justify-between"><span>{t('policymakerDashboard.selfSufficiency')}:</span> <span className="font-bold text-green-500">48.0%</span></div>
+                         <div className="flex justify-between"><span>{t('policymakerDashboard.importDependency')}:</span> <span className="font-bold text-yellow-500">52.0%</span></div>
+                         <div className="flex justify-between"><span>{t('policymakerDashboard.farmerIncome')}:</span> <span className="font-bold text-green-500">+8.2%</span></div>
+                         <div className="flex justify-between"><span>{t('policymakerDashboard.postHarvestLoss')}:</span> <span className="font-bold text-red-500">12.5%</span></div>
                     </CardContent>
                 </Card>
             </div>
             <div className="lg:col-span-3">
                 <Card>
                     <CardHeader>
-                        <CardTitle>AI-Powered Policy Recommendations</CardTitle>
+                        <CardTitle>{t('policymakerDashboard.aiPolicyTitle')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <div>Generating insights...</div>
+                            <div>{t('policymakerDashboard.generatingInsights')}...</div>
                         ) : insights && (
                             <div className="space-y-4">
                                 <p className="italic text-gray-600 dark:text-gray-400">{insights.executiveSummary}</p>

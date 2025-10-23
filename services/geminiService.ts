@@ -3,11 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 import { PriceData, ProductDetails } from '../types';
 import { mockHistoricalPrices } from '../data/mockData';
 
-// This is a placeholder for the actual API key which should be handled securely in a backend environment.
-const API_KEY = process.env.API_KEY || "YOUR_API_KEY_HERE";
-
 // Note: In a real application, you would initialize this in your backend.
-// const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Fix: Initialize the GoogleGenAI client according to the new guidelines.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MOCK_LATENCY = 1500;
 
@@ -17,17 +15,22 @@ const MOCK_LATENCY = 1500;
 export const getPriceForecast = async (commodity: string, duration: 30 | 60 | 90): Promise<PriceData[]> => {
     console.log(`Fetching price forecast for ${commodity} for the next ${duration} days...`);
     
-    // const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
     /*
+    // Fix: Updated to modern Gemini API usage.
     const prompt = `Analyze this historical edible oil price data for ${commodity}: ${JSON.stringify(mockHistoricalPrices)}. 
     Forecast prices for the next ${duration} days. 
     Consider seasonal trends, import data, and monsoon patterns. 
     Return a JSON array of objects with keys: "date" (YYYY-MM-DD), "commodity", "price", "state", "market_name", and "type" ('forecast').
     The price should fluctuate realistically around the last known price.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+        }
+    });
+    const text = response.text;
     return JSON.parse(text);
     */
 
@@ -58,14 +61,23 @@ export const getPriceForecast = async (commodity: string, duration: 30 | 60 | 90
 export const getWeatherAdvisory = async (location: string, crop: string) => {
     console.log(`Getting weather advisory for ${crop} in ${location}...`);
     /*
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // Fix: Updated to modern Gemini API usage.
     const prompt = `Given a 7-day weather forecast (mock: Sunny with intermittent clouds, Temp: 28-35°C, Humidity: 60-75%, Chance of rain: 20%) for ${location}, an oilseed farming region, provide: 
     1) Irrigation recommendations for ${crop}, 
     2) Pest/disease alerts, 
     3) Optimal harvesting window, 
     4) Post-harvest handling advice. 
     Format as a single JSON object with keys: "irrigation", "pestAlerts" (array of strings), "harvestWindow", "postHarvest".`;
-    // ... call API
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+        }
+    });
+    const text = response.text;
+    return JSON.parse(text);
     */
     
     await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY));
@@ -136,4 +148,59 @@ export const getProductDetails = async (commodity: string): Promise<ProductDetai
         growingConditions: { climate: 'Generally prefers temperate to warm climates.', soil: 'Requires well-drained soil.', rainfall: 'Varies by specific crop needs.' },
         typicalUses: [`Primary use for ${commodity} oil extraction.`, `Culinary uses in various forms.`, `Industrial applications.`]
     };
+};
+
+export const getLogisticsInsightsWithMaps = async (query: string): Promise<{ text: string; sources: { uri: string; title: string }[] }> => {
+    console.log(`Fetching logistics insights for query: "${query}"`);
+
+    const userLocation = await new Promise<{ latitude: number; longitude: number }>((resolve) => {
+        if (!navigator.geolocation) {
+            console.warn("Geolocation is not supported by your browser. Using default location.");
+            resolve({ latitude: 22.5, longitude: 78.5 });
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            position => resolve(position.coords),
+            error => {
+                console.warn("Geolocation permission denied, using default location.", error);
+                resolve({ latitude: 22.5, longitude: 78.5 });
+            }
+        );
+    });
+    
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: query,
+            config: {
+                tools: [{ googleMaps: {} }],
+                toolConfig: {
+                    retrievalConfig: {
+                        latLng: {
+                            latitude: userLocation.latitude,
+                            longitude: userLocation.longitude,
+                        },
+                    },
+                },
+            },
+        });
+
+        const text = response.text;
+        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+
+        const sources = groundingChunks
+            .filter(chunk => chunk.maps && chunk.maps.uri && chunk.maps.title)
+            .map(chunk => ({
+                uri: chunk.maps.uri,
+                title: chunk.maps.title,
+            }));
+
+        return { text, sources };
+
+    } catch (error) {
+        console.error("Error calling Gemini API with Maps Grounding:", error);
+        throw new Error("Failed to get response from AI model.");
+    }
 };

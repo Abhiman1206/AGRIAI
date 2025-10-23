@@ -1,8 +1,10 @@
+
 import React, { useState, useMemo } from 'react';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { mockFarmerProfile, mockInsurancePolicies, mockInsuranceClaims, mockIncentives } from '../../data/mockData';
 import { calculateCreditScore, calculateInsurancePremium } from '../../services/financeService';
 import { Banknote, X, ShieldCheck, FileText, Calculator, Award, Star } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CreditScoreGauge = ({ score, rating }) => {
   const percentage = (score - 300) / 600;
@@ -40,24 +42,24 @@ const CreditScoreGauge = ({ score, rating }) => {
 };
 
 const CreditWizard = ({ isOpen, onClose, farmerProfile }) => {
+    const { t } = useLanguage();
   if (!isOpen) return null;
-  // This is a simplified version of the wizard from before for brevity.
-  // The core new functionality is on the main dashboard.
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
         <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-bold">Kisan Credit Card Application</h2>
+          <h2 className="text-xl font-bold">{t('financeDashboard.kccApplicationTitle')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
         </div>
         <div className="p-6">
-            <h3 className="text-lg font-semibold mb-2">Pre-filled Information</h3>
-            <p><strong>Farm Size:</strong> {farmerProfile.farmSizeAcres} acres</p>
-            <p className="mb-4"><strong>Crop History:</strong> {farmerProfile.cropHistory.join(', ')}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">The next step would involve uploading land records via AgriStack. This feature is a prototype demonstration.</p>
+            <h3 className="text-lg font-semibold mb-2">{t('financeDashboard.prefilledInfo')}</h3>
+            <p><strong>{t('financeDashboard.farmSize')}:</strong> {farmerProfile.farmSizeAcres} acres</p>
+            <p className="mb-4"><strong>{t('financeDashboard.cropHistory')}:</strong> {farmerProfile.cropHistory.join(', ')}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('financeDashboard.agriStackNote')}</p>
         </div>
         <div className="p-4 bg-gray-50 dark:bg-gray-900/50 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold">Close</button>
+          <button onClick={onClose} className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold">{t('marketplace.close')}</button>
         </div>
       </div>
     </div>
@@ -70,13 +72,14 @@ const InsuranceCalculator: React.FC = () => {
     const [sumInsured, setSumInsured] = useState(50000);
     const [crop, setCrop] = useState('Mustard');
     const premium = useMemo(() => calculateInsurancePremium(crop, area, sumInsured), [crop, area, sumInsured]);
+    const { t } = useLanguage();
 
     return(
         <Card>
-            <CardHeader><CardTitle className="flex items-center"><Calculator size={18} className="mr-2"/>Insurance Premium Calculator (PMFBY)</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center"><Calculator size={18} className="mr-2"/>{t('financeDashboard.insuranceCalculatorTitle')}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
                  <div>
-                    <label className="block text-sm font-medium">Crop</label>
+                    <label className="block text-sm font-medium">{t('financeDashboard.crop')}</label>
                     <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
                         <option>Mustard</option>
                         <option>Soybean</option>
@@ -84,15 +87,15 @@ const InsuranceCalculator: React.FC = () => {
                     </select>
                 </div>
                  <div>
-                    <label className="block text-sm font-medium">Area (in Acres)</label>
+                    <label className="block text-sm font-medium">{t('financeDashboard.areaAcres')}</label>
                     <input type="number" value={area} onChange={e => setArea(parseFloat(e.target.value))} className="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"/>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium">Sum Insured (₹)</label>
+                    <label className="block text-sm font-medium">{t('financeDashboard.sumInsured')}</label>
                     <input type="number" value={sumInsured} onChange={e => setSumInsured(parseFloat(e.target.value))} className="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"/>
                 </div>
                 <div className="text-center pt-2">
-                    <p className="text-gray-600 dark:text-gray-400">Estimated Farmer's Premium:</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('financeDashboard.estimatedPremium')}:</p>
                     <p className="text-3xl font-bold text-green-600">₹{premium}</p>
                 </div>
             </CardContent>
@@ -105,6 +108,7 @@ const FinanceDashboard = () => {
     const creditProfile = mockFarmerProfile;
     const creditScore = useMemo(() => calculateCreditScore(creditProfile), [creditProfile]);
     const totalIncentivePoints = useMemo(() => mockIncentives.reduce((sum, item) => sum + item.points, 0), []);
+    const { t } = useLanguage();
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -120,22 +124,22 @@ const FinanceDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-1 space-y-6">
              <Card>
-                <CardHeader><CardTitle>My Credit Score</CardTitle></CardHeader>
+                <CardHeader><CardTitle>{t('financeDashboard.myCreditScoreTitle')}</CardTitle></CardHeader>
                 <CardContent className="flex flex-col items-center justify-center space-y-4">
                   <CreditScoreGauge score={creditScore.score} rating={creditScore.rating} />
                   <p className="text-sm text-center text-gray-600 dark:text-gray-400 px-4">{creditScore.eligibility}</p>
                    <button onClick={() => setIsWizardOpen(true)} className="mt-2 w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700">
-                        Apply for KCC Loan
+                        {t('financeDashboard.applyForKcc')}
                     </button>
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader><CardTitle className="flex items-center"><Award size={18} className="mr-2" />Performance Incentives</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center"><Award size={18} className="mr-2" />{t('financeDashboard.performanceIncentivesTitle')}</CardTitle></CardHeader>
                 <CardContent>
                     <div className="text-center mb-4">
-                        <p className="text-gray-600 dark:text-gray-400">Total Reward Points</p>
+                        <p className="text-gray-600 dark:text-gray-400">{t('financeDashboard.totalRewardPoints')}</p>
                         <p className="text-4xl font-bold text-yellow-500">{totalIncentivePoints}</p>
-                        <p className="text-xs text-gray-500">Redeem for input subsidies or reduced premiums.</p>
+                        <p className="text-xs text-gray-500">{t('financeDashboard.redeemNote')}</p>
                     </div>
                     <div className="space-y-2 text-sm">
                         {mockIncentives.map(item => (
@@ -155,7 +159,7 @@ const FinanceDashboard = () => {
           <div className="xl:col-span-1 space-y-6">
             <InsuranceCalculator />
             <Card>
-                <CardHeader><CardTitle className="flex items-center"><ShieldCheck size={18} className="mr-2"/>My Insurance Policies</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center"><ShieldCheck size={18} className="mr-2"/>{t('financeDashboard.myInsurancePoliciesTitle')}</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                     {mockInsurancePolicies.map(policy => (
                         <div key={policy.id} className="p-3 border rounded-lg dark:border-gray-700">
@@ -165,8 +169,8 @@ const FinanceDashboard = () => {
                             </div>
                             <p className="text-xs text-gray-500">Policy #{policy.policyNumber}</p>
                             <div className="text-sm flex justify-between mt-2 pt-2 border-t dark:border-gray-600">
-                                <span>Sum Insured: <span className="font-semibold">₹{policy.sumInsured}</span></span>
-                                <span>Premium: <span className="font-semibold">₹{policy.premium}</span></span>
+                                <span>{t('financeDashboard.sumInsuredShort')}: <span className="font-semibold">₹{policy.sumInsured}</span></span>
+                                <span>{t('financeDashboard.premium')}: <span className="font-semibold">₹{policy.premium}</span></span>
                             </div>
                         </div>
                     ))}
@@ -176,7 +180,7 @@ const FinanceDashboard = () => {
 
           <div className="xl:col-span-1">
             <Card>
-                <CardHeader><CardTitle className="flex items-center"><FileText size={18} className="mr-2"/>Active Insurance Claims</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center"><FileText size={18} className="mr-2"/>{t('financeDashboard.activeInsuranceClaimsTitle')}</CardTitle></CardHeader>
                 <CardContent>
                      <div className="relative border-l-2 border-gray-200 dark:border-gray-700 ml-2">
                         {mockInsuranceClaims.map(claim => (
@@ -184,7 +188,7 @@ const FinanceDashboard = () => {
                                 <span className={`absolute -left-[9px] flex items-center justify-center w-4 h-4 rounded-full ring-4 ring-white dark:ring-gray-800 ${getStatusColor(claim.status)}`}></span>
                                 <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border dark:border-gray-700">
                                     <div className="flex justify-between items-center">
-                                        <p className="font-semibold">Claim: ₹{claim.claimAmount}</p>
+                                        <p className="font-semibold">{t('financeDashboard.claim')}: ₹{claim.claimAmount}</p>
                                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(claim.status)}`}>{claim.status}</span>
                                     </div>
                                      <p className="text-xs text-gray-500 mt-1">{claim.date} - for Policy #{claim.policyId}</p>
