@@ -1,106 +1,155 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { PriceData, ProductDetails } from '../types';
 import { mockHistoricalPrices } from '../data/mockData';
 
-// Note: In a real application, you would initialize this in your backend.
-// Fix: Initialize the GoogleGenAI client according to the new guidelines.
+// Initialize the GoogleGenAI client according to the new guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const MOCK_LATENCY = 1500;
 
-// This service mocks the Gemini API calls for the prototype.
+// This service now makes live Gemini API calls for the prototype.
 // The prompts and expected output structures are designed as per the project requirements.
 
 export const getPriceForecast = async (commodity: string, duration: 30 | 60 | 90): Promise<PriceData[]> => {
     console.log(`Fetching price forecast for ${commodity} for the next ${duration} days...`);
     
-    /*
-    // Fix: Updated to modern Gemini API usage.
     const prompt = `Analyze this historical edible oil price data for ${commodity}: ${JSON.stringify(mockHistoricalPrices)}. 
     Forecast prices for the next ${duration} days. 
     Consider seasonal trends, import data, and monsoon patterns. 
-    Return a JSON array of objects with keys: "date" (YYYY-MM-DD), "commodity", "price", "state", "market_name", and "type" ('forecast').
     The price should fluctuate realistically around the last known price.`;
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-        }
-    });
-    const text = response.text;
-    return JSON.parse(text);
-    */
-
-    // Mock implementation
-    await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY));
-    
-    const lastPrice = mockHistoricalPrices.filter(p => p.commodity === commodity).slice(-1)[0]?.price || 200;
-    const forecastData: PriceData[] = [];
-    const today = new Date();
-
-    for (let i = 1; i <= duration; i++) {
-        const futureDate = new Date(today);
-        futureDate.setDate(today.getDate() + i);
-        const randomFactor = (Math.random() - 0.5) * 5; // Fluctuation
-        const trend = i / duration * 10; // Slight upward trend
-        forecastData.push({
-            date: futureDate.toISOString().split('T')[0],
-            commodity,
-            price: parseFloat((lastPrice + randomFactor + trend).toFixed(2)),
-            state: "National",
-            market_name: "Forecast",
-            type: 'forecast'
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            date: { type: Type.STRING },
+                            commodity: { type: Type.STRING },
+                            price: { type: Type.NUMBER },
+                            state: { type: Type.STRING },
+                            market_name: { type: Type.STRING },
+                            type: { type: Type.STRING },
+                        }
+                    }
+                }
+            }
         });
+        const text = response.text;
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Error fetching price forecast:", error);
+        // Fallback to mock data on error
+        const lastPrice = mockHistoricalPrices.filter(p => p.commodity === commodity).slice(-1)[0]?.price || 200;
+        const forecastData: PriceData[] = [];
+        const today = new Date();
+
+        for (let i = 1; i <= duration; i++) {
+            const futureDate = new Date(today);
+            futureDate.setDate(today.getDate() + i);
+            const randomFactor = (Math.random() - 0.5) * 5;
+            forecastData.push({
+                date: futureDate.toISOString().split('T')[0],
+                commodity,
+                price: parseFloat((lastPrice + randomFactor).toFixed(2)),
+                state: "National (Fallback)",
+                market_name: "Forecast (Fallback)",
+                type: 'forecast'
+            });
+        }
+        return forecastData;
     }
-    return forecastData;
 };
 
 export const getWeatherAdvisory = async (location: string, crop: string) => {
     console.log(`Getting weather advisory for ${crop} in ${location}...`);
-    /*
-    // Fix: Updated to modern Gemini API usage.
+    
     const prompt = `Given a 7-day weather forecast (mock: Sunny with intermittent clouds, Temp: 28-35°C, Humidity: 60-75%, Chance of rain: 20%) for ${location}, an oilseed farming region, provide: 
     1) Irrigation recommendations for ${crop}, 
     2) Pest/disease alerts, 
     3) Optimal harvesting window, 
-    4) Post-harvest handling advice. 
-    Format as a single JSON object with keys: "irrigation", "pestAlerts" (array of strings), "harvestWindow", "postHarvest".`;
+    4) Post-harvest handling advice.`;
     
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-        }
-    });
-    const text = response.text;
-    return JSON.parse(text);
-    */
-    
-    await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY));
-    return {
-        irrigation: `For ${crop}, with temperatures between 28-35°C, apply light irrigation every 3-4 days to maintain soil moisture without causing waterlogging. Early morning is the best time.`,
-        pestAlerts: ["Monitor for aphids and whiteflies due to warm conditions.", "Check for early signs of powdery mildew on leaves."],
-        harvestWindow: "The optimal harvest window appears to be in the next 5-7 days before any potential increase in humidity.",
-        postHarvest: "Ensure proper drying of harvested seeds to below 8% moisture content before storage. Store in a cool, dry place away from direct sunlight."
-    };
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        irrigation: { type: Type.STRING },
+                        pestAlerts: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        harvestWindow: { type: Type.STRING },
+                        postHarvest: { type: Type.STRING },
+                    }
+                }
+            }
+        });
+        const text = response.text;
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Error fetching weather advisory:", error);
+        // Fallback to mock data on error
+        return {
+            irrigation: `[Fallback] For ${crop}, apply light irrigation every 3-4 days.`,
+            pestAlerts: ["Monitor for aphids and whiteflies.", "Check for early signs of powdery mildew."],
+            harvestWindow: "The optimal harvest window appears to be in the next 5-7 days.",
+            postHarvest: "Ensure proper drying of harvested seeds before storage."
+        };
+    }
 };
 
 export const getPolicyInsights = async () => {
     console.log("Generating policy insights...");
-    await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY + 1000));
-    return {
-        executiveSummary: "Analysis of the current value chain data indicates strong production growth in central states but reveals significant logistical bottlenecks in coastal regions, impacting import-export efficiency. Farmer income has risen by an average of 8% YoY, but post-harvest losses remain high at 12%.",
-        recommendations: [
-            { id: 1, text: "Invest in cold storage and warehouse infrastructure in key port-adjacent districts to reduce spoilage and transportation delays.", priority: "High" },
-            { id: 2, text: "Launch targeted FPO training programs in North-Eastern states to improve digital marketplace adoption and price realization.", priority: "Medium" },
-            { id: 3, text: "Subsidize drip irrigation systems for mustard and soybean farmers in arid regions to mitigate climate risks and boost yield.", priority: "High" },
-            { id: 4, text: "Develop a unified quality grading standard and incentivize its adoption at the farm-gate level to improve traceability and export value.", priority: "Low" }
-        ]
-    };
+    const prompt = `Analyze the following situation for India's edible oil value chain: "Strong production growth in central states, significant logistical bottlenecks in coastal regions, farmer income up 8% YoY, but post-harvest losses remain high at 12%." Based on this, provide an executive summary and four prioritized policy recommendations.`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        executiveSummary: { type: Type.STRING },
+                        recommendations: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    id: { type: Type.NUMBER },
+                                    text: { type: Type.STRING },
+                                    priority: { type: Type.STRING },
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        const text = response.text;
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Error generating policy insights:", error);
+         // Fallback to mock data on error
+        return {
+            executiveSummary: "[Fallback] Analysis indicates production growth but reveals logistical bottlenecks impacting efficiency. Farmer income has risen, but post-harvest losses remain high.",
+            recommendations: [
+                { id: 1, text: "Invest in cold storage in port-adjacent districts.", priority: "High" },
+                { id: 2, text: "Launch targeted FPO training programs to improve digital adoption.", priority: "Medium" },
+                { id: 3, text: "Subsidize drip irrigation systems for key crops.", priority: "High" },
+                { id: 4, text: "Develop a unified quality grading standard.", priority: "Low" }
+            ]
+        };
+    }
 }
 
 const mockProductDetails: { [key: string]: Omit<ProductDetails, 'commodity'> } = {
@@ -132,7 +181,6 @@ const mockProductDetails: { [key: string]: Omit<ProductDetails, 'commodity'> } =
 
 export const getProductDetails = async (commodity: string): Promise<ProductDetails> => {
     console.log(`Fetching details for ${commodity}...`);
-    await new Promise(resolve => setTimeout(resolve, MOCK_LATENCY - 500));
     
     const details = mockProductDetails[commodity.toLowerCase()];
 
