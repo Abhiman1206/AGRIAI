@@ -1,0 +1,6 @@
+# Dependencies that are only needed in development
+node_modules/
+.env.local
+.env.development
+README.md
+.gitignore
